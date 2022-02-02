@@ -15,10 +15,10 @@ canvas.height = Math.floor(size * scale);
 
 ctx.scale(scale, scale);
 
-
 const pixel = size/16;
 
 let score = 0;
+let run = true;
 
 let direction = {
     x: 1,
@@ -44,6 +44,9 @@ function update(time = 0) {
 
     draw();
     displayScore();
+    if (!run) {
+        displayGameOver();
+    }
     requestAnimationFrame(update);
 }
 
@@ -57,7 +60,15 @@ function displayScore() {
 }
 
 function displayGameOver() {
-    gameOver.innerText = "Game Over!";
+    ctx.fillStyle = "#000000"
+    ctx.globalAlpha = 0.4;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.globalAlpha = 1;
+    ctx.font = "30px Montserrat, sans-serif";
+    ctx.fillStyle = "#ff576a";
+    ctx.textAlign = "center";
+    ctx.fillText("Game Over!", canvas.width/2, canvas.height/2);
+    score = 0;
 }
 
 function move() {
@@ -65,7 +76,11 @@ function move() {
     const newY = player[0].pos.y + direction.y * pixel;
     const newPos = addPlayerBody(newX, newY);
     
-    if (player.filter(body => {return body.pos.x == newX && body.pos.y == newY}).length > 0) displayGameOver();
+    if (player.filter(body => {return body.pos.x == newX && body.pos.y == newY}).length > 0) {
+        run = false;
+        return;
+    }
+
     if (newX >= canvas.width || newX < 0) return;
     if (newY >= canvas.height || newY < 0) return;
 
