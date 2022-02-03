@@ -15,7 +15,21 @@ canvas.height = Math.floor(size * scale);
 
 ctx.scale(scale, scale);
 
-const pixel = size/16;
+const pixels = 32;
+const pixel = size/pixels;
+
+ctx.fillStyle = "#ffffff";
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+ctx.fillStyle = "#000000"
+ctx.globalAlpha = 0.4;
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+ctx.globalAlpha = 1;
+ctx.font = "30px Montserrat, sans-serif";
+ctx.fillStyle = "#000000";
+ctx.textAlign = "center";
+ctx.fillText("Press any key to start!", canvas.width/2, canvas.height/2);
+
 
 let score = 0;
 let run = true;
@@ -27,7 +41,7 @@ let direction = {
 
 let moveCounter = 0;
 let secInterval = 1000;
-let pixelPerSec = 3;
+let pixelPerSec = 5;
 
 let lastTime = 0;
 function update(time = 0) {
@@ -46,13 +60,14 @@ function update(time = 0) {
     displayScore();
     if (!run) {
         displayGameOver();
+        return;
     }
     requestAnimationFrame(update);
 }
 
 function updateScore() {
     score += 100;
-    pixelPerSec >= 20 ? 20 : pixelPerSec++;
+    pixelPerSec >= pixels ? pixels : pixelPerSec++;
 }
 
 function displayScore() {
@@ -65,15 +80,27 @@ function displayGameOver() {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.globalAlpha = 1;
     ctx.font = "30px Montserrat, sans-serif";
-    ctx.fillStyle = "#ff576a";
+    ctx.fillStyle = "#ff0000";
     ctx.textAlign = "center";
     ctx.fillText("Game Over!", canvas.width/2, canvas.height/2);
+
+    ctx.font = "20px Montserrat, sans-serif";
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText("Press any key to play again.", canvas.width/2, canvas.height/2 + 30);
+    canvas.addEventListener("keydown", start);
     score = 0;
 }
 
 function move() {
-    const newX = player[0].pos.x + direction.x * pixel;
-    const newY = player[0].pos.y + direction.y * pixel;
+    var newX = player[0].pos.x + direction.x * pixel;
+    var newY = player[0].pos.y + direction.y * pixel;
+
+    if (newX >= canvas.width) newX = 0;
+    if (newX < 0) newX = canvas.width;
+    if (newY >= canvas.height) newY = 0;
+    if (newY < 0) newY = canvas.height;
+
+
     const newPos = addPlayerBody(newX, newY);
     
     if (player.filter(body => {return body.pos.x == newX && body.pos.y == newY}).length > 0) {
@@ -81,10 +108,7 @@ function move() {
         return;
     }
 
-    if (newX >= canvas.width || newX < 0) return;
-    if (newY >= canvas.height || newY < 0) return;
-
-    if (newX === apple.pos.x && newY === apple.pos.y) {
+        if (newX === apple.pos.x && newY === apple.pos.y) {
         player.unshift(addPlayerBody(apple.pos.x, apple.pos.y));
         apple = getRandomPos();
         while (player.filter(body => {return body.pos.x === apple.pos.x && body.pos.y == apple.pos.y}).length > 0) {
@@ -167,12 +191,26 @@ canvas.addEventListener("keydown", (event) => {
     keyPressed.push(event.key);
 });
 
-const player = [
-    addPlayerBody(8 * pixel, 7 * pixel),
-    addPlayerBody(7 * pixel, 7 * pixel),
-    addPlayerBody(6 * pixel, 7 * pixel)
-];
+var player; 
 
-var apple = getRandomPos();
+var apple 
 
-update();
+canvas.addEventListener("keydown", start);
+function start() {
+    player = [
+        addPlayerBody(8 * pixel, 7 * pixel),
+        addPlayerBody(7 * pixel, 7 * pixel),
+        addPlayerBody(6 * pixel, 7 * pixel)
+    ];
+
+    apple = getRandomPos();
+    while (player.filter(body => {return body.pos.x === apple.pos.x && body.pos.y == apple.pos.y}).length > 0) {
+        apple = getRandomPos();
+    }
+
+    run = true;
+    pixelPerSec = 5;
+    update();
+
+    canvas.removeEventListener("keydown", start);
+}
